@@ -4,7 +4,7 @@
 
 ### [WIP Alert]
 
-This repository is still wip.  
+This repository is still work in progress.  
  The functionanity of AdamW and SGDW have not been fully checked. The implementation could be wrong.
 
 ## Usage
