@@ -2,7 +2,7 @@
 [Fixing Weight Decay Regularization in Adam](https://arxiv.org/abs/1711.05101)  
  Ilya Loshchilov, Frank Hutter
 
-### !!! WIP Alert !!!
+### [WIP Alert]
 
 The functionanity of AdamW and SGDW have not been fully checked. The implementation could be wrong.
 
