@@ -58,7 +58,7 @@ class AdamW(Optimizer):
         for p, g, m, v in zip(params, grads, ms, vs):
             m_t = (self.beta_1 * m) + (1. - self.beta_1) * g
             v_t = (self.beta_2 * v) + (1. - self.beta_2) * K.square(g)
-            p_t = p - lr_t * m_t / (K.sqrt(v_t) + self.epsilon) - lr * wd * p # decoupled weight decay (4/4)
+            p_t = p - lr_t * m_t / (K.sqrt(v_t) + self.epsilon) - lr_t * wd * p # decoupled weight decay (4/4)
 
             self.updates.append(K.update(m, m_t))
             self.updates.append(K.update(v, v_t))
