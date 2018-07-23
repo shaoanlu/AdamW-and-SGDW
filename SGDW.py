@@ -53,7 +53,7 @@ class SGDW(Optimizer):
             self.updates.append(K.update(m, v))
 
             if self.nesterov:
-                new_p = p + self.momentum * v - lr * g  - lr * wd * p  # decoupled weight decay (4/4)
+                new_p = p + self.momentum * v - lr * g  - wd * p  # decoupled weight decay (4/4)
             else:
                 new_p = p + v - lr * wd * p # decoupled weight decay
 
