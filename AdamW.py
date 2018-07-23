@@ -23,16 +23,17 @@ class AdamW(Optimizer):
         - [Fixing Weight Decay Regularization in Adam](https://arxiv.org/abs/1711.05101)
     """
 
-    def __init__(self, lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4,  # decoupled weight decay (1/4)
+    def __init__(self, lr=0.001, beta_1=0.9, beta_2=0.999, weight_decay=1e-4,  # decoupled weight decay (1/6)
                  epsilon=1e-8, decay=0., **kwargs):
         super(AdamW, self).__init__(**kwargs)
         with K.name_scope(self.__class__.__name__):
             self.iterations = K.variable(0, dtype='int64', name='iterations')
             self.lr = K.variable(lr, name='lr')
+            self.init_lr = lr # decoupled weight decay (2/6)
             self.beta_1 = K.variable(beta_1, name='beta_1')
             self.beta_2 = K.variable(beta_2, name='beta_2')
             self.decay = K.variable(decay, name='decay')
-            self.wd = K.variable(weight_decay, name='weight_decay') # decoupled weight decay (2/4)
+            self.wd = K.variable(weight_decay, name='weight_decay') # decoupled weight decay (3/6)
         self.epsilon = epsilon
         self.initial_decay = decay
 
@@ -40,12 +41,13 @@ class AdamW(Optimizer):
     def get_updates(self, loss, params):
         grads = self.get_gradients(loss, params)
         self.updates = [K.update_add(self.iterations, 1)]
-        wd = self.wd # decoupled weight decay (3/4)
+        wd = self.wd # decoupled weight decay (4/6)
 
         lr = self.lr
         if self.initial_decay > 0:
             lr *= (1. / (1. + self.decay * K.cast(self.iterations,
                                                   K.dtype(self.decay))))
+        eta_t = lr / self.init_lr # decoupled weight decay (5/6)
 
         t = K.cast(self.iterations, K.floatx()) + 1
         lr_t = lr * (K.sqrt(1. - K.pow(self.beta_2, t)) /
@@ -58,7 +60,7 @@ class AdamW(Optimizer):
         for p, g, m, v in zip(params, grads, ms, vs):
             m_t = (self.beta_1 * m) + (1. - self.beta_1) * g
             v_t = (self.beta_2 * v) + (1. - self.beta_2) * K.square(g)
-            p_t = p - lr_t * m_t / (K.sqrt(v_t) + self.epsilon) - wd * p # decoupled weight decay (4/4)
+            p_t = p - lr_t * m_t / (K.sqrt(v_t) + self.epsilon) - eta_t * wd * p # decoupled weight decay (6/6)
 
             self.updates.append(K.update(m, m_t))
             self.updates.append(K.update(v, v_t))

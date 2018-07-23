@@ -22,15 +22,16 @@ class SGDW(Optimizer):
         - [Fixing Weight Decay Regularization in Adam](https://arxiv.org/abs/1711.05101)
     """
 
-    def __init__(self, lr=0.01, momentum=0., decay=0., weight_decay=1e-4, # decoupled weight decay (1/4)
+    def __init__(self, lr=0.01, momentum=0., decay=0., weight_decay=1e-4, # decoupled weight decay (1/6)
                  nesterov=False, **kwargs):
         super(SGDW, self).__init__(**kwargs)
         with K.name_scope(self.__class__.__name__):
             self.iterations = K.variable(0, dtype='int64', name='iterations')
             self.lr = K.variable(lr, name='lr')
+            self.init_lr = lr # decoupled weight decay (2/6)
             self.momentum = K.variable(momentum, name='momentum')
             self.decay = K.variable(decay, name='decay')
-            self.wd = K.variable(weight_decay, name='weight_decay') # decoupled weight decay (2/4)
+            self.wd = K.variable(weight_decay, name='weight_decay') # decoupled weight decay (3/6)
         self.initial_decay = decay
         self.nesterov = nesterov
 
@@ -38,12 +39,14 @@ class SGDW(Optimizer):
     def get_updates(self, loss, params):
         grads = self.get_gradients(loss, params)
         self.updates = [K.update_add(self.iterations, 1)]
-        wd = self.wd  # decoupled weight decay (3/4)
+        wd = self.wd  # decoupled weight decay (4/6)
 
         lr = self.lr
         if self.initial_decay > 0:
             lr *= (1. / (1. + self.decay * K.cast(self.iterations,
                                                   K.dtype(self.decay))))
+        eta_t = lr / self.init_lr # decoupled weight decay (5/6)
+        
         # momentum
         shapes = [K.int_shape(p) for p in params]
         moments = [K.zeros(shape) for shape in shapes]
@@ -53,7 +56,7 @@ class SGDW(Optimizer):
             self.updates.append(K.update(m, v))
 
             if self.nesterov:
-                new_p = p + self.momentum * v - lr * g  - wd * p  # decoupled weight decay (4/4)
+                new_p = p + self.momentum * v - lr * g  - eta_t * wd * p  # decoupled weight decay (6/6)
             else:
                 new_p = p + v - lr * wd * p # decoupled weight decay
 
