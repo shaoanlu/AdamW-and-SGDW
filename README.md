@@ -9,7 +9,7 @@ This repository is still work in progress.
 
 ## Usage
 
-Please have a look at [demo_mnist.ipynb](https://github.com/shaoanlu/AdamW-and-SGDW/blob/master/demo_mnist.ipynb) and [demo_fashion_mnist.ipynb](https://github.com/shaoanlu/AdamW-and-SGDW/blob/master/demo_fashion_mnist.ipynb).
+Please have a look at [demo_fashion_mnist.ipynb](https://github.com/shaoanlu/AdamW-and-SGDW/blob/master/demo_fashion_mnist.ipynb).
 
 ```python
 from AdamW import AdamW
